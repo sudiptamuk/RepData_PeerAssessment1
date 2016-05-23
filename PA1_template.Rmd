@@ -1,25 +1,89 @@
----
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
----
+###Reproducible Research: Peer Assessment 1
+output:  html_document:
+keep_md: true
 
 
 ## Loading and preprocessing the data
+```{r echo=TRUE}
 
-Sudipta
-
+data <- read.csv("activity.csv")
+## copy the master data into another working data frame
+cdata <- data
+```
 ## What is mean total number of steps taken per day?
+```{r echo=TRUE}
+##Calculation the total number of steps taken per day
+splitedData <- split(cdata, cdata$date);
+totalSteps <- sapply(splitedData, function(x) sum(x$steps, na.rm = TRUE))
+as.data.frame(totalSteps)
+hist(totalSteps)
+##Calculate the mean total number os steps taken per day
+meanSteps <-sapply(splitedData, function(x) mean(x$steps, na.rm = TRUE))
+as.data.frame(meanSteps)
+##Calculate the median total number os steps taken per day
+medianSteps <-sapply(splitedData, function(x) median(x$steps, na.rm = TRUE))
+as.data.frame(medianSteps)
 
-
-
+```
 ## What is the average daily activity pattern?
-
-
-
+```{r echo=TRUE}
+timeSplit <- split(cdata, cdata$interval)
+averageSteps <- sapply(timeSplit, function(x) mean(x$steps, na.rm = TRUE))
+plot(averageSteps, type = "l", xlab = "Time Index", ylab = "Average Steps")
+## Five Minute Interval that has maximum average steps
+averageSteps[averageSteps == max(averageSteps)]
+```
 ## Imputing missing values
+```{r echo=TRUE}
+##Total number of missing steps
+missing <- length(which(is.na(cdata$steps)))
+## Fill in missing values of DataSet with mean of all data
+cleanData <- cdata
+meanValue <- mean(cleanData$steps, na.rm = TRUE)
+for(i in 1:nrow(cleanData)){
+                if(is.na(cleanData[i,1])){
+                     cleanData[i,1] = meanValue
+        }
+}
+##For cleandata below
+##Calculation the total number of steps taken per day
+splitedCleanData <- split(cleanData, cleanData$date);
+totalCleanSteps <- sapply(splitedCleanData, function(x) sum(x$steps, na.rm = TRUE))
+as.data.frame(totalCleanSteps)
+hist(totalCleanSteps)
+##Calculate the mean total number os steps taken per day
+meanCleanSteps <-sapply(splitedCleanData, function(x) mean(x$steps, na.rm = TRUE))
+as.data.frame(meanCleanSteps)
+##Calculate the median total number os steps taken per day
+medianCleanSteps <-sapply(splitedCleanData, function(x) median(x$steps, na.rm = TRUE))
+as.data.frame(medianCleanSteps)
 
-
-
+```
 ## Are there differences in activity patterns between weekdays and weekends?
+```{r echo=TRUE}
+w <- c("Saturday", "Sunday")
+cleanData$dayOfWeek <- "WeekDay"
+        for(i in 1:nrow(cleanData)){
+         dayName <- weekdays(as.Date(as.factor(cleanData[i,2])))
+                if(dayName %in% w){
+                     cleanData[i,4] <- "WeekEnd"
+                }
+}
+
+cleanData
+# Lattice Examples 
+library(lattice) 
+attach(cleanData)
+
+
+# create factors with value labels 
+days.f<-factor(dayOfWeek,levels=c("WeekDay", "WeekEnd"),
+  	labels=c("Week Days","Week Ends")) 
+
+
+# kernel density plots by factor level 
+densityplot(~steps|days.f, 
+  	main="Steps Data",
+   xlab="Intervals", layout=c(1,2), plot.points=FALSE)
+
+```
